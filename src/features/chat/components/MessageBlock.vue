@@ -2,16 +2,19 @@
   <article :key="message.id" class="message" :class="{ own: message.own }">
     <p class="author">{{ message.authorId }}</p>
     <p class="bubble">{{ message.text }}</p>
-    <time class="time">{{ message.timestamp }}</time>
+    <time class="time">{{ messageDate }}</time>
   </article>
 </template>
 
 <script setup lang="ts">
 import type { Message } from '@/types/chat'
+import { computed } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   message: Message
 }>()
+
+const messageDate = computed(() => new Date(props.message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
 </script>
 
 <style scoped lang="scss">
