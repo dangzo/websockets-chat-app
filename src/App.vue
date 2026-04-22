@@ -67,7 +67,7 @@ const messages = [
   </main>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .chat-shell {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -86,11 +86,11 @@ const messages = [
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
-}
 
-.users-header h2 {
-  margin: 0;
-  font-size: 20px;
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
 }
 
 .online-pill {
@@ -128,18 +128,18 @@ const messages = [
   height: 10px;
   border-radius: 50%;
   background: #94a3b8;
-}
 
-.status-dot.is-online {
-  background: #22c55e;
-}
+  &.is-online {
+    background: #22c55e;
+  }
 
-.status-dot.is-away {
-  background: #f59e0b;
-}
+  &.is-away {
+    background: #f59e0b;
+  }
 
-.status-dot.is-offline {
-  background: #94a3b8;
+  &.is-offline {
+    background: #94a3b8;
+  }
 }
 
 .user-name {
@@ -156,11 +156,11 @@ const messages = [
 .chat-header {
   padding: 20px 24px;
   border-bottom: 1px solid var(--border);
-}
 
-.chat-header h1 {
-  margin: 0;
-  font-size: 28px;
+  h1 {
+    margin: 0;
+    font-size: 28px;
+  }
 }
 
 .messages {
@@ -178,6 +178,11 @@ const messages = [
 .message.own {
   margin-left: auto;
   text-align: right;
+
+  .bubble {
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+  }
 }
 
 .author {
@@ -195,11 +200,6 @@ const messages = [
   background: var(--bg);
 }
 
-.message.own .bubble {
-  background: var(--accent-bg);
-  border-color: var(--accent-border);
-}
-
 .time {
   display: inline-block;
   margin-top: 6px;
@@ -213,30 +213,30 @@ const messages = [
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 12px;
-}
 
-.composer input {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  font: inherit;
-  color: var(--text-h);
-  background: var(--bg);
-}
+  input {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font: inherit;
+    color: var(--text-h);
+    background: var(--bg);
+  }
 
-.composer button {
-  border: 1px solid var(--accent-border);
-  border-radius: 12px;
-  padding: 12px 20px;
-  font: inherit;
-  font-weight: 600;
-  color: var(--text-h);
-  background: var(--accent-bg);
-  cursor: pointer;
-}
+  button {
+    border: 1px solid var(--accent-border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font: inherit;
+    font-weight: 600;
+    color: var(--text-h);
+    background: var(--accent-bg);
+    cursor: pointer;
 
-.composer button:hover {
-  filter: brightness(1.02);
+    &:hover {
+      filter: brightness(1.02);
+    }
+  }
 }
 
 .sr-only {
