@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import type { Message } from '@/types/chat'
+import { storeToRefs } from 'pinia'
+import { useMessagesStore } from '@/store/messages'
 import MessageList from './components/MessageList.vue'
 import SendMsgForm from './components/SendMsgForm.vue'
 
-defineProps<{
-	messages: Message[]
-}>()
+const messagesStore = useMessagesStore()
+const { messages } = storeToRefs(messagesStore)
 
-const emit = defineEmits<{
-	send: [message: string]
-}>()
+const handleSendMessage = (message: string) => {
+  messagesStore.addMessage({
+    id: messages.value.length + 1,
+    authorId: 1, // Replace with the actual author ID
+    text: message,
+    timestamp: new Date().toISOString(),
+    own: true
+  })
+}
+
 </script>
 
 <template>
@@ -20,7 +27,7 @@ const emit = defineEmits<{
 
 		<MessageList :messages="messages" />
 
-		<SendMsgForm @send="emit('send', $event)" />
+		<SendMsgForm @send="handleSendMessage" />
 	</section>
 </template>
 

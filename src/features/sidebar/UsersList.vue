@@ -12,13 +12,14 @@
 </template>
 
 <script setup lang="ts">
-import type { User } from '@/types/chat'
 import { Pill } from '@/components/ui'
 import UserBox from './components/UserBox.vue'
 
-defineProps<{
-	users: User[]
-}>()
+import { storeToRefs } from 'pinia'
+import { useUsersStore } from '@/store/users'
+
+const usersStore = useUsersStore()
+const { users } = storeToRefs(usersStore)
 </script>
 
 <style scoped lang="scss">
