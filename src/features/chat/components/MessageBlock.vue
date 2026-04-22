@@ -1,8 +1,8 @@
 <template>
   <article :key="message.id" class="message" :class="{ own: message.own }">
-    <p class="author">{{ message.author }}</p>
+    <p class="author">{{ message.authorId }}</p>
     <p class="bubble">{{ message.text }}</p>
-    <time class="time">{{ message.time }}</time>
+    <time class="time">{{ message.timestamp }}</time>
   </article>
 </template>
 

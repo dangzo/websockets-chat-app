@@ -2,34 +2,32 @@
 import { default as ChatLayout} from '@/components/layout/Default.vue'
 import UsersList from '@/features/sidebar/UsersList.vue'
 import Chat from '@/features/chat/Chat.vue'
-import type { Message, User } from '@/types/chat'
+import type { Message } from '@/types/chat'
+import { storeToRefs } from 'pinia'
+import { useUsersStore } from '@/store/users'
 
-const users = [
-  { id: 1, name: 'Olivia', status: 'online' },
-  { id: 2, name: 'Mateo', status: 'away' },
-  { id: 3, name: 'Nina', status: 'online' },
-  { id: 4, name: 'Jonas', status: 'offline' }
-] satisfies User[]
+const usersStore = useUsersStore()
+const { users } = storeToRefs(usersStore)
 
 const messages = [
   {
     id: 1,
-    author: 'Olivia',
+    authorId: 1,
     text: 'Hey team, are we ready for today\'s deployment?',
-    time: '09:42'
+    timestamp: '09:42'
   },
   {
     id: 2,
-    author: 'You',
+    authorId: 2,
     text: 'Almost. I am finishing the final smoke test now.',
-    time: '09:44',
+    timestamp: '09:44',
     own: true
   },
   {
     id: 3,
-    author: 'Nina',
+    authorId: 3,
     text: 'Awesome, I can monitor logs once it is live.',
-    time: '09:45'
+    timestamp: '09:45'
   }
 ] satisfies Message[]
 
