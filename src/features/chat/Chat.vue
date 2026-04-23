@@ -1,22 +1,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useMessagesStore } from '@/store/messages'
-import MessageList from './components/MessageList.vue'
-import SendMsgForm from './components/SendMsgForm.vue'
+import { MessageList, SendMsgForm } from './components'
+import useSendMessage from './composables/useSendMessage'
 
 const messagesStore = useMessagesStore()
 const { messages } = storeToRefs(messagesStore)
 
-const handleSendMessage = (message: string) => {
-  messagesStore.addMessage({
-    id: messages.value.length + 1,
-    authorId: 1, // Replace with the actual author ID
-    text: message,
-    timestamp: new Date().toISOString(),
-    own: true
-  })
-}
-
+const { sendMessage } = useSendMessage()
 </script>
 
 <template>
@@ -26,8 +17,7 @@ const handleSendMessage = (message: string) => {
 		</header>
 
 		<MessageList :messages="messages" />
-
-		<SendMsgForm @send="handleSendMessage" />
+		<SendMsgForm @send="sendMessage" />
 	</section>
 </template>
 
