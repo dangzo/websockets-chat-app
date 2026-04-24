@@ -50,3 +50,26 @@ To build the image directly:
 ```bash
 docker build -t websockets-chat-server .
 ```
+
+## GitHub Actions Deployment
+
+The repository includes a GitHub Actions workflow that automatically deploys to an AWS EC2 instance on every push to `main`.
+
+### Setup
+
+To enable automatic deployment, add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+
+1. **EC2_HOST**: The IP address or hostname of your EC2 instance
+2. **EC2_SSH_KEY**: Your EC2 instance SSH private key (without passphrase)
+3. **EC2_USER**: The SSH username (e.g., `ubuntu`)
+
+### How it works
+
+The workflow:
+1. Checks out your code
+2. SSHes into the EC2 instance
+3. Pulls the latest code from `main`
+4. Runs `docker-compose down` to stop the old container
+5. Runs `docker-compose up -d --build` to rebuild and start the new container
+
+Every push to `main` triggers a fresh deployment automatically.
