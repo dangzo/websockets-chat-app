@@ -2,11 +2,8 @@
 import { onMounted } from 'vue'
 import { MessageList, SendMsgForm } from './components'
 import useChatSocket from './composables/useChatSocket'
-import useSendMessage from './composables/useSendMessage'
 
-const { connect, isConnected, messages } = useChatSocket()
-
-const { sendMessage } = useSendMessage()
+const { connect, isConnected, sendMessage, messages } = useChatSocket()
 
 onMounted(() => {
 	connect()

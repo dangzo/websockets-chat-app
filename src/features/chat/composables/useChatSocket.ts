@@ -8,7 +8,7 @@ const DEFAULT_WS_PORT = '3001'
 
 let socket: WebSocket | null = null
 let activeConnections = 0
-let currentClientId: number | null = null
+const currentClientId = ref<number | null>(null)
 const connectionState = ref<'connecting' | 'open' | 'closed'>('closed')
 
 function resolveSocketUrl() {
@@ -32,6 +32,16 @@ function toUser(client: ServerClient): User {
   }
 }
 
+function mergeUsers(clients: ServerClient[]) {
+  const nextUsers = new Map<number, User>()
+
+  for (const client of clients) {
+    nextUsers.set(client.id, toUser(client))
+  }
+
+  return Array.from(nextUsers.values())
+}
+
 function toMessage(event: Extract<ServerEvent, { type: 'chat_message' }>): Message {
   return {
     id: `${event.client.id}-${event.sentAt}`,
@@ -39,7 +49,7 @@ function toMessage(event: Extract<ServerEvent, { type: 'chat_message' }>): Messa
     authorName: event.client.name,
     text: event.text,
     timestamp: event.sentAt,
-    own: event.client.id === currentClientId,
+    own: event.client.id === currentClientId.value,
   }
 }
 
@@ -75,16 +85,18 @@ const useChatSocket = () => {
       }
 
       if (payload.type === 'welcome') {
-        currentClientId = payload.client.id
-        usersStore.setUsers(payload.clients.map(toUser))
+        currentClientId.value = payload.client.id
+        usersStore.setUsers(mergeUsers([...payload.clients, payload.client]))
         return
       }
 
       if (payload.type === 'presence') {
         if (payload.action === 'joined') {
-          usersStore.updateUser(toUser(payload.client))
+          const nextUser = toUser(payload.client)
 
-          if (!users.value.some((user) => user.id === payload.client.id)) {
+          if (users.value.some((user) => user.id === payload.client.id)) {
+            usersStore.updateUser(nextUser)
+          } else {
             usersStore.addUser(toUser(payload.client))
           }
         }
@@ -102,15 +114,21 @@ const useChatSocket = () => {
       }
 
       if (payload.type === 'profile') {
-        currentClientId = payload.client.id
-        usersStore.updateUser(toUser(payload.client))
+        currentClientId.value = payload.client.id
+        const nextUser = toUser(payload.client)
+
+        if (users.value.some((user) => user.id === payload.client.id)) {
+          usersStore.updateUser(nextUser)
+        } else {
+          usersStore.addUser(nextUser)
+        }
       }
     })
 
     socket.addEventListener('close', () => {
       connectionState.value = 'closed'
       socket = null
-      currentClientId = null
+      currentClientId.value = null
       usersStore.setUsers([])
     }, { once: true })
 
@@ -151,6 +169,7 @@ const useChatSocket = () => {
 
   return {
     connect,
+    currentClientId,
     disconnect,
     isConnected,
     messages,

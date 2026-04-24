@@ -1,8 +1,8 @@
 <template>
-  <li class="user-item">
-    <span class="status-dot" :class="`is-${user.status}`" aria-hidden="true"></span>
-    <span class="user-name">{{ user.name }}</span>
-  </li>
+	<li class="user-item" :class="{ current: isCurrentUser }">
+		<span class="status-dot" :class="`is-${user.status}`" aria-hidden="true"></span>
+		<span class="user-name">{{ user.name }}</span>
+	</li>
 </template>
 
 <script setup lang="ts">
@@ -10,6 +10,7 @@ import type { User } from '@/types/chat'
 
 defineProps<{
 	user: User
+	isCurrentUser?: boolean
 }>()
 </script>
 
@@ -22,6 +23,11 @@ defineProps<{
 	border: 1px solid var(--border);
 	border-radius: 10px;
 	background: var(--bg);
+
+	&.current {
+		border-color: var(--accent-border);
+		background: var(--accent-bg);
+	}
 }
 
 .status-dot {

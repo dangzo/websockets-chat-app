@@ -6,13 +6,20 @@
 		</div>
 
 		<ul class="users-list">
-			<UserBox v-for="user in users" :key="user.id" :user="user" />
+			<UserBox
+				v-for="user in orderedUsers"
+				:key="user.id"
+				:user="user"
+				:is-current-user="user.id === currentClientId"
+			/>
 		</ul>
 	</aside>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Pill } from '@/components/ui'
+import useChatSocket from '@/features/chat/composables/useChatSocket'
 import UserBox from './components/UserBox.vue'
 
 import { storeToRefs } from 'pinia'
@@ -20,6 +27,21 @@ import { useUsersStore } from '@/store/users'
 
 const usersStore = useUsersStore()
 const { users } = storeToRefs(usersStore)
+const { currentClientId } = useChatSocket()
+
+const orderedUsers = computed(() => {
+	return [...users.value].sort((left, right) => {
+		if (left.id === currentClientId.value) {
+			return -1
+		}
+
+		if (right.id === currentClientId.value) {
+			return 1
+		}
+
+		return left.name.localeCompare(right.name)
+	})
+})
 </script>
 
 <style scoped lang="scss">

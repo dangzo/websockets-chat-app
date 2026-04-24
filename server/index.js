@@ -48,6 +48,8 @@ wss.on('connection', (socket) => {
     }),
   )
 
+  console.log(`Client connected: ${client.name} (ID: ${client.id})`)
+
   broadcast(
     {
       type: 'presence',
@@ -128,6 +130,8 @@ wss.on('connection', (socket) => {
       client,
       onlineCount: clients.size,
     })
+
+    console.log(`Client disconnected: ${client.name} (ID: ${client.id})`)
   })
 })
 
