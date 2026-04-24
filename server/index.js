@@ -43,6 +43,7 @@ wss.on('connection', (socket) => {
     JSON.stringify({
       type: 'welcome',
       client,
+      clients: Array.from(clients.values()),
       onlineCount: clients.size,
     }),
   )
@@ -97,12 +98,16 @@ wss.on('connection', (socket) => {
         return
       }
 
-      broadcast({
+      const message = {
         type: 'chat_message',
         text,
         client,
         sentAt: new Date().toISOString(),
-      })
+      }
+
+      broadcast(message)
+
+      socket.send(JSON.stringify(message))
       return
     }
 

@@ -1,6 +1,6 @@
 <template>
   <article :key="message.id" class="message" :class="{ own: message.own }">
-    <p class="author">{{ message.authorId }}</p>
+		<p class="author">{{ message.authorName }}</p>
     <p class="bubble">{{ message.text }}</p>
     <time class="time">{{ messageDate }}</time>
   </article>

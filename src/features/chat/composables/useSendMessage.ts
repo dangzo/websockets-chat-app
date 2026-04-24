@@ -1,21 +1,14 @@
-import { useMessagesStore } from '@/store/messages'
+import useChatSocket from './useChatSocket'
 
 const useSendMessage = () => {
-  const messagesStore = useMessagesStore()
+  const { sendMessage } = useChatSocket()
 
-  function sendMessage(text: string) {
-    const newMessage = {
-      id: Date.now(), // Using timestamp as a unique ID for simplicity
-      authorId: 2, // Assuming the current user has an ID of 2
-      text,
-      timestamp: new Date().toISOString(),
-      own: true
-    }
-    messagesStore.addMessage(newMessage)
+  function submitMessage(text: string) {
+    return sendMessage(text)
   }
 
   return {
-    sendMessage
+    sendMessage: submitMessage
   }
 };
 

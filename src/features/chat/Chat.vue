@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { useMessagesStore } from '@/store/messages'
+import { onMounted } from 'vue'
 import { MessageList, SendMsgForm } from './components'
+import useChatSocket from './composables/useChatSocket'
 import useSendMessage from './composables/useSendMessage'
 
-const messagesStore = useMessagesStore()
-const { messages } = storeToRefs(messagesStore)
+const { connect, isConnected, messages } = useChatSocket()
 
 const { sendMessage } = useSendMessage()
+
+onMounted(() => {
+	connect()
+})
 </script>
 
 <template>
 	<section aria-label="Chat window">
 		<header class="chat-header">
 			<h1>Web Chat</h1>
+			<p class="status" :class="{ connected: isConnected }">
+				{{ isConnected ? 'Connected' : 'Connecting...' }}
+			</p>
 		</header>
 
 		<MessageList :messages="messages" />
@@ -31,10 +37,23 @@ section {
 .chat-header {
 	padding: 20px 24px;
 	border-bottom: 1px solid var(--border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 
 	h1 {
 		margin: 0;
 		font-size: 28px;
+	}
+}
+
+.status {
+	margin: 0;
+	font-size: 13px;
+	color: var(--text);
+
+	&.connected {
+		color: #22c55e;
 	}
 }
 
