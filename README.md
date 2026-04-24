@@ -4,6 +4,8 @@ Side project to learn about WebSockets and real-time communication in web applic
 
 This chat app allows users to connect and communicate with each other in real-time using WebSockets.
 
+Demo url: http://51.20.83.35
+
 ## Features
 - Real-time messaging: Users can send and receive messages instantly.
 - User connection status: Users can see who is currently online.
