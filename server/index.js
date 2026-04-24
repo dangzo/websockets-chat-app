@@ -90,6 +90,12 @@ wss.on('connection', (socket) => {
 
       client.name = name
       socket.send(JSON.stringify({ type: 'profile', client }))
+      broadcast({
+        type: 'presence',
+        action: 'updated',
+        client,
+        onlineCount: clients.size,
+      }, socket)
       return
     }
 
@@ -107,7 +113,7 @@ wss.on('connection', (socket) => {
         sentAt: new Date().toISOString(),
       }
 
-      broadcast(message)
+      broadcast(message, socket)
 
       socket.send(JSON.stringify(message))
       return

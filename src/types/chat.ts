@@ -29,7 +29,7 @@ export type ServerEvent =
     }
   | {
       type: 'presence';
-      action: 'joined' | 'left';
+      action: 'joined' | 'left' | 'updated';
       client: ServerClient;
       onlineCount: number;
     }

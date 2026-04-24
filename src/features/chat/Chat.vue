@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { MessageList, SendMsgForm } from './components'
 import useChatSocket from './composables/useChatSocket'
 
-const { connect, isConnected, sendMessage, messages } = useChatSocket()
-
-onMounted(() => {
-	connect()
-})
+const { currentClientName, isConnected, sendMessage, messages } = useChatSocket()
 </script>
 
 <template>
 	<section aria-label="Chat window">
 		<header class="chat-header">
-			<h1>Web Chat</h1>
+			<div>
+				<h1>Web Chat</h1>
+				<p class="subtitle">Signed in as {{ currentClientName }}</p>
+			</div>
 			<p class="status" :class="{ connected: isConnected }">
 				{{ isConnected ? 'Connected' : 'Connecting...' }}
 			</p>
@@ -39,9 +37,14 @@ section {
 	justify-content: space-between;
 
 	h1 {
-		margin: 0;
+		margin: 0 0 4px;
 		font-size: 28px;
 	}
+}
+
+.subtitle {
+	font-size: 14px;
+	color: var(--text);
 }
 
 .status {
