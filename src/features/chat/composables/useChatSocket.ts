@@ -4,7 +4,7 @@ import { useMessagesStore } from '@/store/messages'
 import { useUsersStore } from '@/store/users'
 import type { Message, ServerClient, ServerEvent, User } from '@/types/chat'
 
-const DEFAULT_WS_PORT = '3001'
+const DEFAULT_WS_PORT = import.meta.env.VITE_SERVER_URL || 3001
 
 let socket: WebSocket | null = null
 let activeConnections = 0
@@ -14,7 +14,7 @@ const hasChosenName = ref(false)
 const connectionState = ref<'connecting' | 'open' | 'closed'>('closed')
 
 function resolveSocketUrl() {
-  const explicitUrl = import.meta.env.VITE_WS_URL
+  const explicitUrl = import.meta.env.VITE_SERVER_URL
 
   if (explicitUrl) {
     return explicitUrl
