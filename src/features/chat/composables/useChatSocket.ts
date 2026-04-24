@@ -4,8 +4,6 @@ import { useMessagesStore } from '@/store/messages'
 import { useUsersStore } from '@/store/users'
 import type { Message, ServerClient, ServerEvent, User } from '@/types/chat'
 
-const DEFAULT_WS_PORT = import.meta.env.VITE_SERVER_URL || 3001
-
 let socket: WebSocket | null = null
 let activeConnections = 0
 const currentClientId = ref<number | null>(null)
@@ -20,10 +18,12 @@ function resolveSocketUrl() {
     return explicitUrl
   }
 
+  // Auto-detect: use same host as the page, connect via /ws
+  // Works for both local dev (Vite proxy) and production (Nginx proxy)
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const { hostname } = window.location
+  const { host } = window.location
 
-  return `${protocol}//${hostname}:${DEFAULT_WS_PORT}`
+  return `${protocol}//${host}/ws`
 }
 
 function toUser(client: ServerClient): User {
