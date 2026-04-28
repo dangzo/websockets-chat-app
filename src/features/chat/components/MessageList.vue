@@ -1,6 +1,11 @@
 <template>
   <div class="messages" aria-live="polite">
-    <MessageBlock v-for="message in messages" :key="message.id" :message="message" />
+    <MessageBlock
+			v-for="(message, index) of messages"
+			:key="message.id"
+			:is-child="isChild(index)"
+			:message="message"
+		/>
   </div>
 </template>
 
@@ -8,9 +13,13 @@
 import type { Message } from '@/types/chat'
 import MessageBlock from './MessageBlock.vue'
 
-defineProps<{
+const props = defineProps<{
 	messages: Message[]
 }>()
+
+const isChild = (index: number) => {
+	return index > 0 && props.messages[index - 1].authorId === props.messages[index].authorId
+}
 </script>
 
 <style scoped lang="scss">

@@ -1,8 +1,10 @@
 <template>
   <article :key="message.id" class="message" :class="{ own: message.own }">
-		<p class="author">{{ message.authorName }}</p>
-    <p class="bubble">{{ message.text }}</p>
-    <time class="time">{{ messageDate }}</time>
+		<p class="author" v-if="!isChild">{{ message.authorName }}</p>
+    <div class="bubble">
+			{{ message.text }}
+    	<time class="time">{{ messageDate }}</time>
+		</div>
   </article>
 </template>
 
@@ -11,7 +13,8 @@ import type { Message } from '@/types/chat'
 import { computed } from 'vue'
 
 const props = defineProps<{
-  message: Message
+  message: Message,
+	isChild: Boolean
 }>()
 
 const messageDate = computed(() => new Date(props.message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
@@ -49,8 +52,10 @@ const messageDate = computed(() => new Date(props.message.timestamp).toLocaleTim
 
 .time {
 	display: inline-block;
-	margin-top: 6px;
-	font-size: 12px;
+	position: relative;
+	bottom: -8px;
+	margin-left: 6px;
+	font-size: 10px;
 	color: var(--text);
 }
 </style>
