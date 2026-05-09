@@ -7,13 +7,6 @@ const host = process.env.WS_HOST ?? '0.0.0.0'
 
 const app = express()
 
-app.get('/', (request, response) => {
-  response.json({
-    status: 'ok',
-    websocket: `ws://${request.headers.host ?? `localhost:${port}`}`,
-  })
-})
-
 const server = createServer(app)
 
 const io = new Server(server, {
@@ -24,6 +17,7 @@ const io = new Server(server, {
 const clients = new Map()
 let nextClientId = 1
 
+// Broadcast a message to all clients, optionally excluding one socket ID (e.g. the sender)
 function broadcast(payload, excludedSocketId) {
   if (excludedSocketId) {
     io.except(excludedSocketId).emit('server_event', payload)
@@ -33,7 +27,18 @@ function broadcast(payload, excludedSocketId) {
   io.emit('server_event', payload)
 }
 
+// Main entry point: returns server status and WebSocket URL
+app.get('/', (request, response) => {
+  response.json({
+    status: 'ok',
+    websocket: `ws://${request.headers.host ?? `localhost:${port}`}`,
+  })
+})
+
+
+// WebSocket connection handler
 io.on('connection', (socket) => {
+  // Assigns a unique client ID and default name
   const clientId = nextClientId
   nextClientId += 1
 
@@ -44,6 +49,7 @@ io.on('connection', (socket) => {
 
   clients.set(socket, client)
 
+  // Notifies the new client of their profile
   socket.emit('server_event', {
     type: 'welcome',
     client,
@@ -53,6 +59,7 @@ io.on('connection', (socket) => {
 
   console.log(`Client connected: ${client.name} (ID: ${client.id})`)
 
+  // Broadcasts presence updates to all other clients
   broadcast(
     {
       type: 'presence',
@@ -63,6 +70,7 @@ io.on('connection', (socket) => {
     socket.id,
   )
 
+  // Handles name changes
   socket.on('set_name', (payload) => {
     if (!payload || typeof payload !== 'object' || typeof payload.name !== 'string') {
       socket.emit('server_event', {
@@ -92,6 +100,7 @@ io.on('connection', (socket) => {
     }, socket.id)
   })
 
+  // Handles incoming messages
   socket.on('chat_message', (payload) => {
     if (!payload || typeof payload !== 'object' || typeof payload.text !== 'string') {
       socket.emit('server_event', {
@@ -119,6 +128,7 @@ io.on('connection', (socket) => {
     socket.emit('server_event', message)
   })
 
+  // Cleans up on disconnect
   socket.on('disconnect', () => {
     clients.delete(socket)
 
@@ -133,6 +143,7 @@ io.on('connection', (socket) => {
   })
 })
 
+// Start the server
 server.listen(port, host, () => {
   console.log(`WebSocket server listening on http://${host}:${port}`)
 })
