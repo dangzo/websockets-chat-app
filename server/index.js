@@ -1,18 +1,20 @@
 import { createServer } from 'node:http'
 import { Server } from 'socket.io'
+import express from 'express'
 
 const port = Number(process.env.PORT ?? 3001)
 const host = process.env.WS_HOST ?? '0.0.0.0'
 
-const server = createServer((request, response) => {
-  response.writeHead(200, { 'Content-Type': 'application/json' })
-  response.end(
-    JSON.stringify({
-      status: 'ok',
-      websocket: `ws://${request.headers.host ?? `localhost:${port}`}`,
-    }),
-  )
+const app = express()
+
+app.get('/', (request, response) => {
+  response.json({
+    status: 'ok',
+    websocket: `ws://${request.headers.host ?? `localhost:${port}`}`,
+  })
 })
+
+const server = createServer(app)
 
 const io = new Server(server, {
   path: '/ws',
@@ -23,11 +25,12 @@ const clients = new Map()
 let nextClientId = 1
 
 function broadcast(payload, excludedSocketId) {
-  for (const socket of io.sockets.sockets.values()) {
-    if (socket.id !== excludedSocketId) {
-      socket.emit('server_event', payload)
-    }
+  if (excludedSocketId) {
+    io.except(excludedSocketId).emit('server_event', payload)
+    return
   }
+
+  io.emit('server_event', payload)
 }
 
 io.on('connection', (socket) => {
@@ -131,5 +134,5 @@ io.on('connection', (socket) => {
 })
 
 server.listen(port, host, () => {
-  console.log(`Socket.IO server listening on http://${host}:${port}`)
+  console.log(`WebSocket server listening on http://${host}:${port}`)
 })
