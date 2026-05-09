@@ -1,10 +1,11 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { io, type Socket } from 'socket.io-client'
 import { useMessagesStore } from '@/store/messages'
 import { useUsersStore } from '@/store/users'
 import type { Message, ServerClient, ServerEvent, User } from '@/types/chat'
 
-let socket: WebSocket | null = null
+let socket: Socket | null = null
 let activeConnections = 0
 const currentClientId = ref<number | null>(null)
 const currentClientName = ref('')
@@ -15,15 +16,12 @@ function resolveSocketUrl() {
   const explicitUrl = import.meta.env.VITE_SERVER_URL
 
   if (explicitUrl) {
-    return explicitUrl
+    return explicitUrl.replace(/\/ws\/?$/, '')
   }
 
-  // Auto-detect: use same host as the page, connect via /ws
+  // Auto-detect: use same host as the page and connect via Socket.IO path /ws.
   // Works for both local dev (Vite proxy) and production (Nginx proxy)
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const { host } = window.location
-
-  return `${protocol}//${host}/ws`
+  return window.location.origin
 }
 
 function toUser(client: ServerClient): User {
@@ -72,23 +70,23 @@ const useChatSocket = () => {
     ownsConnection = true
     activeConnections += 1
 
-    if (socket && socket.readyState !== WebSocket.CLOSED) {
+    if (socket && socket.connected) {
       return
     }
 
-    socket = new WebSocket(resolveSocketUrl())
+    socket = io(resolveSocketUrl(), {
+      path: '/ws',
+      transports: ['websocket'],
+    })
+
     connectionState.value = 'connecting'
 
-    socket.addEventListener('open', () => {
+    socket.on('connect', () => {
       connectionState.value = 'open'
     })
 
-    socket.addEventListener('message', (event) => {
-      let payload: ServerEvent
-
-      try {
-        payload = JSON.parse(event.data) as ServerEvent
-      } catch {
+    socket.on('server_event', (payload: ServerEvent) => {
+      if (!payload || typeof payload !== 'object' || !('type' in payload)) {
         return
       }
 
@@ -136,16 +134,16 @@ const useChatSocket = () => {
       }
     })
 
-    socket.addEventListener('close', () => {
+    socket.on('disconnect', () => {
       connectionState.value = 'closed'
       socket = null
       currentClientId.value = null
       currentClientName.value = ''
       hasChosenName.value = false
       usersStore.setUsers([])
-    }, { once: true })
+    })
 
-    socket.addEventListener('error', () => {
+    socket.on('connect_error', () => {
       connectionState.value = 'closed'
     })
   }
@@ -159,7 +157,7 @@ const useChatSocket = () => {
     activeConnections = Math.max(0, activeConnections - 1)
 
     if (activeConnections === 0 && socket) {
-      socket.close()
+      socket.disconnect()
       socket = null
     }
   }
@@ -167,16 +165,11 @@ const useChatSocket = () => {
   function setName(name: string) {
     const value = name.trim()
 
-    if (!value || !socket || socket.readyState !== WebSocket.OPEN) {
+    if (!value || !socket || !socket.connected) {
       return false
     }
 
-    socket.send(
-      JSON.stringify({
-        type: 'set_name',
-        name: value,
-      }),
-    )
+    socket.emit('set_name', { name: value })
 
     return true
   }
@@ -184,16 +177,11 @@ const useChatSocket = () => {
   function sendMessage(text: string) {
     const value = text.trim()
 
-    if (!value || !socket || socket.readyState !== WebSocket.OPEN) {
+    if (!value || !socket || !socket.connected) {
       return false
     }
 
-    socket.send(
-      JSON.stringify({
-        type: 'chat_message',
-        text: value,
-      }),
-    )
+    socket.emit('chat_message', { text: value })
 
     return true
   }

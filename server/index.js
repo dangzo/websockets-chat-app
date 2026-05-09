@@ -1,5 +1,5 @@
 import { createServer } from 'node:http'
-import { WebSocketServer, WebSocket } from 'ws'
+import { Server } from 'socket.io'
 
 const port = Number(process.env.PORT ?? 3001)
 const host = process.env.WS_HOST ?? '0.0.0.0'
@@ -14,21 +14,23 @@ const server = createServer((request, response) => {
   )
 })
 
-const wss = new WebSocketServer({ server })
+const io = new Server(server, {
+  path: '/ws',
+  transports: ['websocket'],
+})
+
 const clients = new Map()
 let nextClientId = 1
 
-function broadcast(payload, excludedClient) {
-  const message = JSON.stringify(payload)
-
-  for (const client of wss.clients) {
-    if (client !== excludedClient && client.readyState === WebSocket.OPEN) {
-      client.send(message)
+function broadcast(payload, excludedSocketId) {
+  for (const socket of io.sockets.sockets.values()) {
+    if (socket.id !== excludedSocketId) {
+      socket.emit('server_event', payload)
     }
   }
 }
 
-wss.on('connection', (socket) => {
+io.on('connection', (socket) => {
   const clientId = nextClientId
   nextClientId += 1
 
@@ -39,14 +41,12 @@ wss.on('connection', (socket) => {
 
   clients.set(socket, client)
 
-  socket.send(
-    JSON.stringify({
-      type: 'welcome',
-      client,
-      clients: Array.from(clients.values()),
-      onlineCount: clients.size,
-    }),
-  )
+  socket.emit('server_event', {
+    type: 'welcome',
+    client,
+    clients: Array.from(clients.values()),
+    onlineCount: clients.size,
+  })
 
   console.log(`Client connected: ${client.name} (ID: ${client.id})`)
 
@@ -57,77 +57,66 @@ wss.on('connection', (socket) => {
       client,
       onlineCount: clients.size,
     },
-    socket,
+    socket.id,
   )
 
-  socket.on('message', (rawMessage) => {
-    let payload
-
-    try {
-      payload = JSON.parse(rawMessage.toString())
-    } catch {
-      socket.send(
-        JSON.stringify({
-          type: 'error',
-          message: 'Messages must be valid JSON.',
-        }),
-      )
-      return
-    }
-
-    if (payload.type === 'set_name' && typeof payload.name === 'string') {
-      const name = payload.name.trim()
-
-      if (!name) {
-        socket.send(
-          JSON.stringify({
-            type: 'error',
-            message: 'Name cannot be empty.',
-          }),
-        )
-        return
-      }
-
-      client.name = name
-      socket.send(JSON.stringify({ type: 'profile', client }))
-      broadcast({
-        type: 'presence',
-        action: 'updated',
-        client,
-        onlineCount: clients.size,
-      }, socket)
-      return
-    }
-
-    if (payload.type === 'chat_message' && typeof payload.text === 'string') {
-      const text = payload.text.trim()
-
-      if (!text) {
-        return
-      }
-
-      const message = {
-        type: 'chat_message',
-        text,
-        client,
-        sentAt: new Date().toISOString(),
-      }
-
-      broadcast(message, socket)
-
-      socket.send(JSON.stringify(message))
-      return
-    }
-
-    socket.send(
-      JSON.stringify({
+  socket.on('set_name', (payload) => {
+    if (!payload || typeof payload !== 'object' || typeof payload.name !== 'string') {
+      socket.emit('server_event', {
         type: 'error',
-        message: 'Unsupported message type.',
-      }),
-    )
+        message: 'Name must be a valid string.',
+      })
+      return
+    }
+
+    const name = payload.name.trim()
+
+    if (!name) {
+      socket.emit('server_event', {
+        type: 'error',
+        message: 'Name cannot be empty.',
+      })
+      return
+    }
+
+    client.name = name
+    socket.emit('server_event', { type: 'profile', client })
+    broadcast({
+      type: 'presence',
+      action: 'updated',
+      client,
+      onlineCount: clients.size,
+    }, socket.id)
   })
 
-  socket.on('close', () => {
+  socket.on('chat_message', (payload) => {
+    if (!payload || typeof payload !== 'object' || typeof payload.text !== 'string') {
+      socket.emit('server_event', {
+        type: 'error',
+        message: 'Message text must be a valid string.',
+      })
+      return
+    }
+
+    const text = payload.text.trim()
+
+    if (!text) {
+      return
+    }
+
+    const message = {
+      type: 'chat_message',
+      text,
+      client,
+      sentAt: new Date().toISOString(),
+    }
+
+    broadcast(message, socket.id)
+
+    socket.emit('server_event', message)
+  })
+
+  socket.on('disconnect', () => {
     clients.delete(socket)
 
     broadcast({
@@ -142,5 +131,5 @@ wss.on('connection', (socket) => {
 })
 
 server.listen(port, host, () => {
-  console.log(`WebSocket server listening on http://${host}:${port}`)
+  console.log(`Socket.IO server listening on http://${host}:${port}`)
 })

@@ -10,7 +10,7 @@ Demo url: http://51.20.83.35
 - Real-time messaging: Users can send and receive messages instantly.
 - User connection status: Users can see who is currently online.
 - Login screen: Users can enter a username to join the chat.
-- Node.js backend: The server is built using Node.js and the `ws` library for handling WebSocket connections.
+- Node.js backend: The server is built using Node.js and Socket.IO for real-time communication.
 
 To see multiple users in action, open the app in multiple browser windows or tabs and log in with different usernames. You will see the messages being exchanged in real-time across all connected clients.
 
